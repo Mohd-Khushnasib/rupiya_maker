@@ -1427,7 +1427,7 @@ class AdminController extends Controller
     }
 
     // add leads
-    public function addLeads(Request $request)
+    public function addLeadsOLD(Request $request)
     {
         $existingLead = DB::table('tbl_lead')->where('mobile', $request->mobile)->first();
 
@@ -1484,6 +1484,104 @@ class AdminController extends Controller
         } else {
         }
     }
+
+    public function addLeads(Request $request)
+    {
+        // Check if lead already exists
+        $existingLead = DB::table('tbl_lead')->where('mobile', $request->mobile)->first();
+    
+        if ($existingLead) {
+            return response()->json([
+                'success' => 'exists',
+                'message' => 'Mobile number already exists for this Lead',
+            ]);
+        }
+    
+        $admin_id = $request->admin_id;
+    
+        // Sanitize numeric fields
+        $obligation = preg_replace('/[^0-9]/', '', $request->obligation);
+        $pos = preg_replace('/[^0-9]/', '', $request->pos);
+
+        $loan_amount = preg_replace('/[^0-9]/', '', $request->loan_amount);
+        $salary = preg_replace('/[^0-9]/', '', $request->salary);
+        $yearly_bonus = preg_replace('/[^0-9]/', '', $request->yearly_bonus);
+    
+        // Ensure single values are stored properly
+        $data = [
+            'status' => '1',
+            'lead_login_status' => 'Lead',
+            'lead_status' => 'NEW LEAD',
+            'admin_id' => $admin_id,
+            'product_id' => $request->product_id,
+            'campaign_id' => $request->campaign_id,
+            'data_code' => $request->data_code,
+            'name' => $request->name,
+            'mobile' => $request->mobile,
+            'alternate_mobile' => $request->alternate_mobile,
+            'pincode' => $request->pincode,
+            'product_need_id' => $request->product_need_id,
+            'casetype_id' => $request->casetype_id,
+            'loan_amount' => $loan_amount,
+            'tenure' => $request->tenure,
+            'year' => $request->year,
+            'process' => $request->process,
+            'date' => $request->date,
+            'salary' => $salary,
+            'yearly_bonus' => $yearly_bonus, 
+            'company_name' => $request->company_name, 
+            'company_type' => $request->company_type, 
+            'company_category_id' => $request->company_category_id, 
+            'obligation' => $obligation, 
+            'pos' => $pos, 
+            'cibil_score' => $request->cibil_score, 
+            'date' => $this->date 
+        ];
+    
+        // Insert lead and get lead ID
+        $leadId = DB::table('tbl_lead')->insertGetId($data);
+    
+        // Generate lead ID with 'PL' prefix
+        $leadIdWithPrefix = 'PL' . $leadId;
+        DB::table('tbl_lead')->where('id', $leadId)->update(['leadid' => $leadIdWithPrefix]);
+    
+        // Insert lead status
+        DB::table('tbl_lead_status')->insert([
+            'admin_id'    => $admin_id,
+            'lead_id'     => $leadId,
+            'lead_status' => 'NEW LEAD',
+            'date'        => $this->date,
+        ]);
+    
+        // ✅ Insert into tbl_obligation (For multiple products)
+        if (!empty($request->product_idd) && is_array($request->product_idd)) {
+            $obligationData = [];
+    
+            foreach ($request->product_idd as $index => $productId) {
+                $obligationData[] = [
+                    'admin_id'          => $admin_id, 
+                    'lead_id'           => $leadId, 
+                    'product_id'        => $productId,
+                    'bank_id'           => $request->bank_id[$index] ?? null,
+                    'total_loan_amount' => preg_replace('/[^0-9]/', '', $request->total_loan_amount[$index] ?? null),
+                    'bt_pos'            => preg_replace('/[^0-9]/', '', $request->bt_pos[$index] ?? null),
+                    'bt_emi'            => preg_replace('/[^0-9]/', '', $request->bt_emi[$index] ?? null),
+                    'bt_obligation'     => $request->bt_obligation[$index] ?? null,
+                    'date'              => $this->date,
+                ];
+            }
+    
+            DB::table('tbl_obligation')->insert($obligationData);
+        }
+    
+        return response()->json([
+            'success' => 'success',
+        ]);
+    }
+    
+    
+
+
 
     ### Check Lead Already Exist ###
     public function checkLeadOLD(Request $request)
@@ -3494,19 +3592,33 @@ class AdminController extends Controller
     }
 
     // onchange company type to company category
+    // public function fetchCompanyCategory(Request $request)
+    // {
+    //     $companyType = $request->input('company_type');
+    //     $validTypes  = ['LLP FIRM', 'PARTENERSHIP FIRM', 'PROPRITER'];
+    //     if (in_array($companyType, $validTypes)) {
+    //         $categories = DB::table('tbl_company_category')
+    //             ->select('id', 'company_name', 'company_category', 'company_bank')
+    //             ->get();
+    //         return response()->json($categories);
+    //     } else {
+    //         return response()->json([]);
+    //     }
+    // }
+
     public function fetchCompanyCategory(Request $request)
     {
         $companyType = $request->input('company_type');
-        $validTypes  = ['LLP FIRM', 'PARTENERSHIP FIRM', 'PROPRITER'];
+        $validTypes  = ['LLP FIRM', 'PARTENERSHIP FIRM', 'PROPRITER']; // JavaScript ke saath match kiya
         if (in_array($companyType, $validTypes)) {
             $categories = DB::table('tbl_company_category')
                 ->select('id', 'company_name', 'company_category', 'company_bank')
                 ->get();
-            return response()->json($categories);
-        } else {
-            return response()->json([]);
+            return response()->json($categories, 200); // Success response
         }
+        return response()->json([], 200); // Empty response agar company type match nahi karta
     }
+
 
     // show pl od leads lead status onchange krne pr
     public function filterLeads(Request $request)

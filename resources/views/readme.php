@@ -423,3 +423,17 @@ consultant
 senior consultant
 TL
 Manager 
+
+========================= Git Coomand Start Here Push ====================
+1=> git init 
+2=> git remote add origin https://github.com/Mohd-Khushnasib/rupiya_maker.git
+3=> git add .
+4=> git commit -m "Initial commit"
+5=> git branch -M main
+6=> git push -u origin main
+
+===== This is for local to live pushh commands ===== 
+1=> git add .
+2=> git commit "ok"
+3=> git commit -m "Updated feature XYZ"
+4=> git push -u origin main 

@@ -204,7 +204,6 @@ function showdata() {
                         let commentsArray = feed.comments.split('||'); // Comments ko split karein
                         let commentersArray = feed.commenter_names ? feed.commenter_names.split('||') : [];
                         let commentDatesArray = feed.comment_dates ? feed.comment_dates.split('||') : []; // ✅ Comment Dates
-
                         commentsArray.forEach((comment, index) => {
                             let commenterName = commentersArray[index] || 'Anonymous';
                             let commentTime = commentDatesArray[index] ? timeAgo(commentDatesArray[index]) : 'Just now';

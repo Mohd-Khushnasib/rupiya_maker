@@ -3,18 +3,19 @@
 @extends('Admin.layouts.master')
 @section('main-content')
 <style>
-    input#tenure {
-        position: relative;
-    }
-    datalist#tenureList {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        z-index: 1000;
-        width: 100%;
-        max-height: 200px;
-        overflow-y: auto;
-    }
+input#tenure {
+    position: relative;
+}
+
+datalist#tenureList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+}
 </style>
 
 <!-- Main Content Start Here  -->
@@ -43,23 +44,9 @@
                             <div class="form-group">
                                 <label class="control-label text-light">Product Name</label>
                                 <div class="controls">
-                                    <!-- <select disabled required id="productSelect" name="product_id" class="form-control"
-                                        data-placeholder="Choose a Category" tabindex="1">
-                                        <option disabled="true" selected="true">Select Product</option>
-                                        @php
-                                        $products = DB::table('tbl_product')->orderBy('id', 'desc')->get();
-                                        @endphp
-                                        @foreach($products as $item)
-                                        <option value="{{ $item->id }}"
-                                            {{ isset($selectedProductId) && $selectedProductId == $item->id ? 'selected' : '' }}>
-                                            {{ $item->product_name ?? '' }}
-                                        </option>
-                                        @endforeach
-                                    </select> -->
 
-                                    <select required id="productSelect" name="product_id" class="form-control"
-                                            data-placeholder="Choose a Category" tabindex="1"
-                                            onfocus="this.removeAttribute('readonly');" readonly>
+                                    <!-- Disabled select field -->
+                                    <select id="productSelect" class="form-control" disabled>
                                         <option disabled="true" selected="true">Select Product</option>
                                         @php
                                         $products = DB::table('tbl_product')->orderBy('id', 'desc')->get();
@@ -71,6 +58,9 @@
                                         </option>
                                         @endforeach
                                     </select>
+                                    <!-- Hidden Input Field -->
+                                    <input type="hidden" name="product_id" id="hiddenProductId"
+                                        value="{{ $selectedProductId ?? '' }}">
                                 </div>
                             </div>
                         </div>
@@ -95,8 +85,17 @@
                             <div class="form-group">
                                 <label class="text-light control-label">Data Code</label>
                                 <div class="controls">
-                                    <input type="text" name="data_code" id="data_code" placeholder="Enter Data Code ..."
-                                        class="form-control">
+                                    <!-- <input type="text" name="data_code" id="data_code" placeholder="Enter Data Code ..."
+                                        class="form-control"> -->
+                                        <select name="data_code" id="data_code" class="form-control">
+                                            <option selected="true" disabled="true">-- Choose Datacode --</option>
+                                        @php
+                                        $datacodes = DB::table('tbl_datacode')->orderBy('id','desc')->get();
+                                        @endphp
+                                        @foreach($datacodes as $item)
+                                        <option value="{{ $item->id }}">{{ $item->datacode_name ?? '' }}</option>
+                                        @endforeach
+                                        </select>
                                 </div>
                             </div>
                         </div>
@@ -113,9 +112,8 @@
                             <div class="form-group">
                                 <label class="text-light control-label">Mobile Number</label>
                                 <div class="controls">
-                                    <input type="text" name="mobile" id="mobile"
-                                        placeholder="Enter Mobile Number ..." class="form-control"
-                                        value="{{ $mobileNumber ?? '' }}" readonly>
+                                    <input type="text" name="mobile" id="mobile" placeholder="Enter Mobile Number ..."
+                                        class="form-control" value="{{ $mobileNumber ?? '' }}" readonly>
                                     <!-- <span id="mobileError" style="color:red;display:none;"></span> -->
                                     <!-- 10 Digit Condition -->
                                 </div>
@@ -129,16 +127,17 @@
                                     <input oninput="sendData()" type="text" name="alternate_mobile"
                                         id="alternate_mobile" placeholder="Enter Alternate Mobile Number ..."
                                         class="form-control">
-                                        <!-- Allready Mobile No In Lead -->
-                                        <span id="mobileError" style="color:red;display:none">Mobile number already exists for
-                                    this lead</span>
-                                        <!-- Allready Mobile No In Lead -->
+                                    <!-- Allready Mobile No In Lead -->
+                                    <span id="mobileError" style="color:red;display:none">Mobile number already exists
+                                        for
+                                        this lead</span>
+                                    <!-- Allready Mobile No In Lead -->
                                     <!-- Digit Check Max 10 -->
                                     <span id="alternatemobileError" style="color:red;display:none;"></span>
                                     <!-- 10 Digit Condition -->
                                     <!-- Error Message Display input alternate and match mobile no then message show -->
                                     <span id="altMobileError"></span>
-                                     <!-- Error Message Display input alternate and match mobile no then message show -->
+                                    <!-- Error Message Display input alternate and match mobile no then message show -->
                                 </div>
                             </div>
                         </div>
@@ -148,7 +147,8 @@
                                 <div class="controls">
                                     <input type="text" name="pincode" id="pincode" placeholder="201301 , New Delhi"
                                         class="form-control" oninput="validatePincode()">
-                                    <span id="pincodecheck" style="color: red; display: none;">Please enter a valid pincode format: 123456 , City</span>
+                                    <span id="pincodecheck" style="color: red; display: none;">Please enter a valid
+                                        pincode format: 123456 , City</span>
                                 </div>
                             </div>
                         </div>
@@ -292,6 +292,20 @@ window.jQuery || document.write('<script src="assets/jquery/jquery-2.1.1.min.js"
 </script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var productSelect = document.getElementById("productSelect");
+    var hiddenProductId = document.getElementById("hiddenProductId");
+
+    // Select change hone par hidden input update ho
+    productSelect.addEventListener("change", function() {
+        hiddenProductId.value = this.value;
+    });
+
+    // Agar pehle se koi product selected hai to hidden input me set karein
+    hiddenProductId.value = productSelect.value;
+});
+</script>
 <!-- Check Lead Already Exist -->
 <script>
 function sendData() {
@@ -328,31 +342,32 @@ function sendData() {
 
 <!-- alternate_mobile and mobile both check then message show -->
 <script>
-    $(document).ready(function () {
-        $("#alternate_mobile").on("input", function () {
-            let mainMobile = $("#mobile").val().trim();
-            let alternateMobile = $(this).val().trim();
-            if (alternateMobile === mainMobile) {
-                $("#altMobileError").text("Alternate mobile number should be different").css("color", "red");
-            } else {
-                $("#altMobileError").text(""); // Error message hide karega agar valid hai
-            }
-        });
+$(document).ready(function() {
+    $("#alternate_mobile").on("input", function() {
+        let mainMobile = $("#mobile").val().trim();
+        let alternateMobile = $(this).val().trim();
+        if (alternateMobile === mainMobile) {
+            $("#altMobileError").text("Alternate mobile number should be different").css("color",
+                "red");
+        } else {
+            $("#altMobileError").text(""); // Error message hide karega agar valid hai
+        }
     });
+});
 </script>
 <!-- alternate_mobile and mobile both check then message show -->
 
 
 <!-- Mobile No Validate Only Digits Allowed Start Here -->
 <script>
-    $(document).ready(function () {
-        $("#alternate_mobile").on("input", function () {
-            let value = $(this).val();
-            // Sirf 0-9 digits allow karega, baki sab remove karega (spaces, letters, symbols)
-            let cleanedValue = value.replace(/[^0-9]/g, ''); 
-            $(this).val(cleanedValue);
-        });
+$(document).ready(function() {
+    $("#alternate_mobile").on("input", function() {
+        let value = $(this).val();
+        // Sirf 0-9 digits allow karega, baki sab remove karega (spaces, letters, symbols)
+        let cleanedValue = value.replace(/[^0-9]/g, '');
+        $(this).val(cleanedValue);
     });
+});
 </script>
 <!-- Mobile No Validate Only Digits Allowed End Here -->
 
@@ -363,7 +378,7 @@ function validatePincode() {
     const inputField = document.getElementById('pincode');
     const errorMessage = document.getElementById('pincodecheck');
     let value = inputField.value.trim();
-    
+
     // Allow only numeric characters for the first 6 digits
     const numericOnly = /^[0-9]*$/;
 
@@ -386,7 +401,7 @@ function validatePincode() {
     const restrictedPattern = /^(?!878787$)\d{6}$/; // Check if not '878787'
     if (value.match(regex) && restrictedPattern.test(value.slice(0, 6))) {
         errorMessage.style.display = 'none';
-        inputField.setCustomValidity(""); 
+        inputField.setCustomValidity("");
     } else if (value.length > 6) {
         inputField.value = value.slice(0, 6) + ", ";
         errorMessage.style.display = 'none';
@@ -440,9 +455,9 @@ function validateMobile() {
 }
 
 
-// Check 10 Digits 
+// Check 10 Digits
 $('#alternate_mobile').on('input', function() {
-    const mobileNumber = $(this).val(); 
+    const mobileNumber = $(this).val();
     if (mobileNumber.length !== 10 && mobileNumber.length > 0) {
         $('#alternatemobileError').show().text("Mobile number must be exactly 10 digits.");
     } else {
@@ -456,23 +471,93 @@ $('#alternate_mobile').on('input', function() {
 <!-- Add Lead Here -->
 <script>
 // add lead add here
-$("#add_form").submit(function(e) {
+// $("#add_form").submit(function(e) {
+//     var campaign_id = $("select[name='campaign_id']").val();
+//     var data_code = $("#data_code").val();
+//     var name = $("#name").val();
+//     var alternate_mobile = $("#alternate_mobile").val();
+//     var pincode = $("#pincode").val();
+//     if (campaign_id) {} else {
+//         alertify.set('notifier', 'position', 'top-right');
+//         alertify.error('Campaign Name required');
+//         return;
+//     }
+//     if (data_code) {} else {
+//         alertify.set('notifier', 'position', 'top-right');
+//         alertify.error('Datacode required');
+//         return;
+//     }
+//     if (name) {} else {
+//         alertify.set('notifier', 'position', 'top-right');
+//         alertify.error('Customer Name required');
+//         return;
+//     }
+//     if (!alternate_mobile || alternate_mobile.length !== 10 || isNaN(alternate_mobile)) {
+//         alertify.set('notifier', 'position', 'top-right');
+//         alertify.error('Alternate Mobile Number must be exactly 10 digits');
+//         return;
+//     }
+//     if (pincode) {} else {
+//         alertify.set('notifier', 'position', 'top-right');
+//         alertify.error('Pincode required');
+//         return;
+//     }
+
+
+//     e.preventDefault();
+//     var formData = new FormData(this);
+//     $.ajax({
+//         type: "post",
+//         url: "{{url('/add_leads')}}",
+//         data: formData,
+//         dataType: "json",
+//         contentType: false,
+//         processData: false,
+//         cache: false,
+//         encode: true,
+//         success: function(data) {
+//             if (data.success == 'success') {
+//                 document.getElementById("add_form").reset();
+//                 swal("Lead Added Successfully", "", "success");
+//                 // setTimeout(function() {
+//                 //     window.location.reload();
+//                 // }, 1000);
+//                 window.location.href = "{{url('/admin-lead-form')}}";
+//             } else if (data.success == 'exists') {
+//                 swal(data.message, "", "warning");
+//             } else {
+//                 $(".btn_submit").prop("disabled", false);
+//                 swal("Lead Not Added", "", "error");
+//             }
+//         },
+//         error: function(err) {}
+//     });
+// });
+
+
+
+$("#add_form").submit(function(e) 
+{
+    e.preventDefault();
     var campaign_id = $("select[name='campaign_id']").val();
     var data_code = $("#data_code").val();
     var name = $("#name").val();
+    var mobile = $("#mobile").val();
     var alternate_mobile = $("#alternate_mobile").val();
     var pincode = $("#pincode").val();
-    if (campaign_id) {} else {
+    var product_id = $("select[name='product_id']").val(); // Get product_id
+
+    if (!campaign_id) {
         alertify.set('notifier', 'position', 'top-right');
         alertify.error('Campaign Name required');
         return;
     }
-    if (data_code) {} else {
+    if (!data_code) {
         alertify.set('notifier', 'position', 'top-right');
         alertify.error('Datacode required');
         return;
     }
-    if (name) {} else {
+    if (!name) {
         alertify.set('notifier', 'position', 'top-right');
         alertify.error('Customer Name required');
         return;
@@ -482,42 +567,73 @@ $("#add_form").submit(function(e) {
         alertify.error('Alternate Mobile Number must be exactly 10 digits');
         return;
     }
-    if (pincode) {} else {
+    if (!pincode) {
         alertify.set('notifier', 'position', 'top-right');
         alertify.error('Pincode required');
         return;
     }
+    if (mobile === alternate_mobile) {
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.error('Mobile Number Already Exists');
+        return;
+    }
 
-
-    e.preventDefault();
-    var formData = new FormData(this);
+    // Check mobile existence before submitting form
     $.ajax({
-        type: "post",
-        url: "{{url('/add_leads')}}",
-        data: formData,
+        type: "POST",
+        url: "{{ url('/check_mobile_existence') }}",
+        data: {
+            mobile: mobile,
+            alternate_mobile: alternate_mobile,
+            product_id: product_id
+        },
         dataType: "json",
-        contentType: false,
-        processData: false,
-        cache: false,
-        encode: true,
-        success: function(data) {
-            if (data.success == 'success') {
-                document.getElementById("add_form").reset();
-                swal("Lead Added Successfully", "", "success");
-                // setTimeout(function() {
-                //     window.location.reload();
-                // }, 1000);
-                window.location.href = "{{url('/admin-lead-form')}}";
-            } else if (data.success == 'exists') {
-                swal(data.message, "", "warning");
+        success: function(response) {
+            if (response.exists == true) {
+                alertify.set('notifier', 'position', 'top-right');
+                if (response.field === 'mobile') {
+                    // alert("Mobile1 Alert");
+                    alertify.error(response.message);
+                } else if (response.field === 'alternate_mobile') {
+                    // alert("Mobile2 ALert");
+                    alertify.error(response.message);
+                }
             } else {
-                $(".btn_submit").prop("disabled", false);
-                swal("Lead Not Added", "", "error");
+                // alert("Wrong");
+                var formData = new FormData($("#add_form")[0]);
+                $.ajax({
+                    type: "POST",
+                    url: "{{ url('/add_leads') }}",
+                    data: formData,
+                    dataType: "json",
+                    contentType: false,
+                    processData: false,
+                    cache: false,
+                    encode: true,
+                    success: function(data) {
+                        if (data.success == 'success') {
+                            $("#add_form")[0].reset();
+                            swal("Lead Added Successfully", "", "success");
+                            window.location.href = "{{ url('/admin-lead-form') }}";
+                        } else if (data.success == 'exists') {
+                            swal(data.message, "", "warning");
+                        } else {
+                            $(".btn_submit").prop("disabled", false);
+                            swal("Lead Not Added", "", "error");
+                        }
+                    },
+                    error: function(err) {
+                        console.log("Error:", err);
+                    }
+                });
             }
         },
-        error: function(err) {}
+        error: function(err) {
+            console.log("Error:", err);
+        }
     });
 });
+
 // add lead end here
 </script>
 

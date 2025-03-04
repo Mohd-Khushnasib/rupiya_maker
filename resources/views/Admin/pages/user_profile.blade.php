@@ -3383,7 +3383,8 @@ $(document).ready(function() {
 
 <!-- Onchange Company type to company category  -->
 <script>
-$(document).ready(function() {
+$(document).ready(function()
+{
     $('#companyType').on('change', function() {
         let companyType = $(this).val();
         let validTypes = ['LLP FIRM', 'LIMITED FIRM', 'PRIVATE LIMITED FIRM'];
@@ -3445,7 +3446,6 @@ $(document).ready(function() {
         );
         $('#productSelect').closest('.form-group').closest('.col-sm-12').hide();
     }
-
 });
 </script>
 
