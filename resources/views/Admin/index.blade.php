@@ -25,7 +25,7 @@ $total_user = DB::table('users')->count();
         <div class="page-title">
             <div>
                 <h1 class="theam_color_text"><i class="fa fa-home theam_color "></i>
-                    Updates ok</h1>
+                    Updates bye</h1>
             </div>
         </div>
         <!-- BEGIN Main Content -->
