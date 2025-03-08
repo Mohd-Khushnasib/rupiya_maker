@@ -437,3 +437,20 @@ Manager
 2=> git commit "ok"
 3=> git commit -m "Updated feature XYZ"
 4=> git push -u origin main 
+
+
+======  =======
+1=> home me count like (50+)
+2=> calculator nan me icon me convert karna hai 
+3=> calculator ki ui sahi karke dena hai 
+4=> share link crud (share krne pr automatic 24hours me auto delete ho jaye)
+5=> warning me category wise filter dropdown me count bhi 
+6=> create lead me re assignment me mobile-customer name 
+7=> reassignment me action me accept/reject krne pr reason and icon me show 
+8=> mobile par click krne pr lead ki fulldetails 
+9=> logindate and disbursed date se filter dropdown me choose krne pr ayega (dropdown me disbursed/logindate)   plodlogin me
+
+// Member Login
+https://pjewellers.com/DoctcareCrm/Auth/Login
+// Employee Login
+https://pjewellers.com/DoctcareCrm/Auth/EmployeeLogin

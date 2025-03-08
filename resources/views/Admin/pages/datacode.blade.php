@@ -246,7 +246,7 @@ $("#delete_form").submit(function(e) {
     });
 });
 
-// edit category modal
+// edit datacode modal
 $(document).on('click', '.edit', function() {
     var id = $(this).data('id');
     var datacode_name = $(this).data('datacode_name');
@@ -262,7 +262,7 @@ $("#edit_form").submit(function(e) {
     $.ajax({
         type: "post",
         url: "{{url('/update_datacode')}}",
-        data: formData,
+        data: formData, 
         dataType: "json",
         contentType: false,
         processData: false,

@@ -21,7 +21,6 @@ class AdminController extends Controller
         $this->date = $kolkataDateTime->format('Y-m-d h:i A');
     }
 
-
     ### Feed 
     public function add_feed(Request $request)
     {
@@ -1229,11 +1228,11 @@ class AdminController extends Controller
     public function update_datacode(Request $request)
     {
         $data = [
-            'id'            => $request->id,
+            'id' => $request->id,
             'datacode_name' => $request->datacode_name,
         ];
 
-        if (! empty($data)) {
+        if (!empty($data)) {
             $update = DB::table('tbl_datacode')->where('id', $request->id)->update($data);
             return response()->json([
                 'success' => 'success',
@@ -2321,13 +2320,6 @@ class AdminController extends Controller
         ]);
     }
 
-
-    
-
-
-
-
-
     // ExcelExportPlOdLead
     public function ExcelExportPlOdLead(Request $request)
     {
@@ -2552,6 +2544,236 @@ class AdminController extends Controller
         // Return response
         echo json_encode(['data' => $logins]);
     }
+
+
+
+
+    ################# HOME LOAN LEADS START HERE #################
+        ### show_Home_Loan_Lead ###
+        public function show_Home_Loan_Lead(Request $request)
+        {
+            return view('Admin.pages.show_home_loan_leads');
+        }
+    
+        public function show_Home_Loan_LeadAPI(Request $request)
+        {
+            $search             = $request->search;             // for search
+            $lead_status        = $request->lead_status;        // for lead_status
+            $from_date          = $request->from_date;          // for from_date
+            $to_date            = $request->to_date;            // for to_date
+            $activity_from_date = $request->activity_from_date; // for activity_from_date
+            $valid_statuses     = [
+                'NEW LEAD', 'IN PROGRESS', 'FOLLOW UP', 'CALLBACK',
+                'IMPORTANT LEAD', 'LONG FOLLOW UP', 'IN DOCUMENTATION', 'FILE COMPLETED',
+            ];
+
+            // Base query
+            $query = DB::table('tbl_lead')
+                ->leftJoin('tbl_product', 'tbl_product.id', '=', 'tbl_lead.product_id')
+                ->leftJoin('tbl_campaign', 'tbl_campaign.id', '=', 'tbl_lead.campaign_id')
+                ->leftJoin('tbl_product_need', 'tbl_product_need.id', '=', 'tbl_lead.product_need_id')
+                ->leftJoin('tbl_reassignment_lead', 'tbl_reassignment_lead.lead_id', '=', 'tbl_lead.id')
+                ->select(
+                    'tbl_lead.*', 
+                    'tbl_product.product_name', 
+                    'tbl_campaign.campaign_name', 
+                    'tbl_product_need.product_need'
+                )
+                ->where('tbl_lead.lead_login_status', 'Lead') // Show only 'Lead' status leads
+                ->where(function ($query) {
+                    $query->where('tbl_reassignment_lead.lead_request_status', 'Accept')   // Lead Request Status 'Accept'
+                        ->orWhereNull('tbl_reassignment_lead.lead_id'); // Lead ID jo insert nahi hui ho
+                })
+                ->orderBy('tbl_lead.id', 'desc');
+    
+    
+            // Apply search filter
+            if (! empty($search) && ($search != 'undefined')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('tbl_lead.name', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_lead.mobile', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_product.product_name', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_lead.lead_status', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_lead.pincode', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_lead.company_name', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_lead.loan_amount', 'like', '%' . $search . '%');
+                });
+            }
+    
+            // Apply lead_status filter (if provided)
+            if ($lead_status) {
+                $query->where('tbl_lead.lead_status', $lead_status);
+            }
+    
+            // Apply date filters (if provided)
+            if ($from_date && $to_date) {
+                if ($from_date == $to_date) {
+                    // Fetch records for a single date
+                    $query->whereDate('tbl_lead.date', '=', $from_date);
+                } else {
+                    // Adjust `to_date` to include the entire day
+                    $query->whereBetween('tbl_lead.date', [$from_date, date('Y-m-d', strtotime($to_date . ' +1 day'))]);
+                }
+            } elseif ($from_date) {
+                $query->whereDate('tbl_lead.date', '>=', $from_date);
+            } elseif ($to_date) {
+                $query->whereDate('tbl_lead.date', '<=', $to_date);
+            }
+    
+            // Apply Activity Date Filter only for specific lead statuses
+            if ($activity_from_date) {
+                $current_date       = date('Y-m-d h:i A');
+                $activity_from_date = date('Y-m-d h:i A', strtotime($activity_from_date));
+                $excluded_leads     = DB::table('tbl_lead_status')
+                    ->whereBetween(DB::raw("STR_TO_DATE(date, '%Y-%m-%d %h:%i %p')"), [$activity_from_date, $current_date])
+                    ->pluck('lead_id')
+                    ->toArray();
+                if (! empty($excluded_leads)) {
+                    $query->whereNotIn('tbl_lead.id', $excluded_leads);
+                } else {
+                    $query->whereDate(DB::raw("STR_TO_DATE(tbl_lead.date, '%Y-%m-%d %h:%i %p')"), '<=', $current_date);
+                }
+                // lead_status show only 'NEW LEAD', 'IN PROGRESS', 'FOLLOW UP', 'CALLBACK','IMPORTANT LEAD', 'LONG FOLLOW UP', 'IN DOCUMENTATION', 'FILE COMPLETED'
+                $query->whereIn('tbl_lead.lead_status', $valid_statuses);
+            }
+    
+            // Apply pagination
+            $leads = $query->paginate(2);
+    
+            // Return response
+            return response()->json([
+                'data'         => $leads->items(),
+                'current_page' => $leads->currentPage(),
+                'last_page'    => $leads->lastPage(),
+                'per_page'     => $leads->perPage(),
+                'total'        => $leads->total(),
+                'success'      => 'success',
+            ]);
+        }
+
+    ################# Home Loan Login Start Here #################
+        // Pl Od Login
+        public function show_Home_Loan_Login(Request $request)
+        {
+            return view('Admin.pages.show_home_loan_login');
+        }
+        public function show_Home_Loan_LoginAPI(Request $request)
+        {
+            $search             = $request->search;             // for searching
+            $from_date          = $request->from_date;          // for fromdate
+            $to_date            = $request->to_date;            // for todate
+            $login_status       = $request->login_status;       // for leadstatus
+            $activity_from_date = $request->activity_from_date; // for activity_from_date
+    
+            $valid_statuses = [
+                'NEW FILE', 'SENT TO BANK', 'UNDERWRITING', 'REELOK',
+                'REELOK-HIGH PRIORITY', 'APPROVED', 'DISBURSED',
+            ];
+    
+            // Base query
+            $query = DB::table('tbl_lead')
+                ->leftJoin('tbl_product', 'tbl_product.id', '=', 'tbl_lead.product_id')
+                ->leftJoin('tbl_campaign', 'tbl_campaign.id', '=', 'tbl_lead.campaign_id')
+                ->leftJoin('tbl_product_need', 'tbl_product_need.id', '=', 'tbl_lead.product_need_id')
+                ->select('tbl_lead.*', 'tbl_product.product_name', 'tbl_campaign.campaign_name', 'tbl_product_need.product_need')
+                ->where('tbl_lead.lead_login_status', 'Login') // Show only 'Login' status leads
+                // ->orderBy('tbl_lead.id', 'desc');
+                ->orderBy('tbl_lead.move_login_date', 'desc');
+    
+            // Apply search filter (works independently)
+            if (! empty($search) && ($search != 'undefined')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('tbl_lead.name', 'like', '%' . $search . '%')
+                        ->orWhere('tbl_lead.mobile', 'like', '%' . $search . '%');
+                });
+            }
+    
+            // Apply login_status filter (if provided)
+            if ($login_status) {
+                $query->where('tbl_lead.login_status', $login_status);
+            }
+    
+            // Apply date filters (if provided)
+            if ($from_date && $to_date) {
+                if ($from_date == $to_date) {
+                    // Single date ke liye records fetch kare
+                    $query->where(function ($q) use ($from_date) {
+                        $q->whereDate('tbl_lead.date', '=', $from_date)
+                            ->orWhereDate('tbl_lead.disbursment_date', '=', $from_date);
+                    });
+                } else {
+                    // `to_date` ko ek din badhaya gaya taaki poora din consider ho
+                    $adjusted_to_date = date('Y-m-d', strtotime($to_date . ' +1 day'));
+                    $query->where(function ($q) use ($from_date, $adjusted_to_date) {
+                        $q->whereBetween('tbl_lead.date', [$from_date, $adjusted_to_date])
+                            ->orWhereBetween('tbl_lead.disbursment_date', [$from_date, $adjusted_to_date]);
+                    });
+                }
+            } elseif ($from_date) {
+                $query->where(function ($q) use ($from_date) {
+                    $q->whereDate('tbl_lead.date', '>=', $from_date)
+                        ->orWhereDate('tbl_lead.disbursment_date', '>=', $from_date);
+                });
+            } elseif ($to_date) {
+                $query->where(function ($q) use ($to_date) {
+                    $q->whereDate('tbl_lead.date', '<=', $to_date)
+                        ->orWhereDate('tbl_lead.disbursment_date', '<=', $to_date);
+                });
+            }
+    
+                // Apply Activity Date Filter only for specific lead statuses
+                // if ($activity_from_date) {
+                //     $current_date = date('Y-m-d h:i A');
+                //     $excluded_leads = DB::table('tbl_lead_status')
+                //         ->whereBetween('date', [$activity_from_date, $current_date])
+                //         ->pluck('lead_id')
+                //         ->toArray();
+                //     if (!empty($excluded_leads)) {
+                //         $query->whereNotIn('tbl_lead.id', $excluded_leads);
+                //     } else {
+                //         $query->whereDate('tbl_lead.date', '<=', $current_date);
+                //     }
+                //    // lead_status show only 'NEW FILE', 'SENT TO BANK', 'UNDERWRITING', 'REELOK', 'REELOK-HIGH PRIORITY', 'APPROVED', 'DISBURSED'
+                //     $query->whereIn('tbl_lead.login_status', $valid_statuses);
+                // }
+    
+            if ($activity_from_date) {
+                $current_date       = date('Y-m-d h:i A');
+                $activity_from_date = date('Y-m-d h:i A', strtotime($activity_from_date));
+                $excluded_leads     = DB::table('tbl_lead_status')
+                    ->whereBetween(DB::raw("STR_TO_DATE(date, '%Y-%m-%d %h:%i %p')"), [$activity_from_date, $current_date])
+                    ->pluck('lead_id')
+                    ->toArray();
+                if (! empty($excluded_leads)) {
+                    $query->whereNotIn('tbl_lead.id', $excluded_leads);
+                } else {
+                    $query->whereDate(DB::raw("STR_TO_DATE(tbl_lead.date, '%Y-%m-%d %h:%i %p')"), '<=', $current_date);
+                }
+                // lead_status show only 'NEW FILE', 'SENT TO BANK', 'UNDERWRITING', 'REELOK', 'REELOK-HIGH PRIORITY', 'APPROVED', 'DISBURSED'
+                $query->whereIn('tbl_lead.login_status', $valid_statuses);
+            }
+    
+            // Apply pagination
+            $leads = $query->paginate(5);
+    
+            // Return response
+            return response()->json([
+                'data'         => $leads->items(),
+                'current_page' => $leads->currentPage(),
+                'last_page'    => $leads->lastPage(),
+                'per_page'     => $leads->perPage(),
+                'total'        => $leads->total(),
+                'success'      => 'success',
+            ]);
+        }
+
+
+
+
+
+
+
+
 
 
 

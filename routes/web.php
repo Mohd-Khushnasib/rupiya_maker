@@ -261,7 +261,7 @@ Route::get('/admin-datacode', [AdminController::class, 'datacode']);
 Route::post('/add_datacode', [AdminController::class, 'add_datacode']);
 Route::post('/update_datacode', [AdminController::class, 'update_datacode']);
 Route::post('/delete_datacode', [AdminController::class, 'delete_datacode']);
-#### Manage Product Wise Important Question Here ####
+#### Manage Product Wise Important Question Here #### 
 Route::get('/admin-imp-question', [AdminController::class, 'imp_question']);
 Route::post('/add_imp_question', [AdminController::class, 'add_imp_question']);
 Route::post('/update_imp_question', [AdminController::class, 'update_imp_question']);
@@ -304,6 +304,15 @@ Route::post('/show_Pl_Od_LeadAPI', [AdminController::class, 'show_Pl_Od_LeadAPI'
 ### show_pl_od_login ###
 Route::get('/show_pl_od_login', [AdminController::class, 'show_Pl_Od_Login']);
 Route::post('/show_Pl_Od_loginapi', [AdminController::class, 'show_Pl_Od_LoginAPI']);
+
+### show_home_loan_leads ###
+Route::get('/show_home_loan_leads', [AdminController::class, 'show_Home_Loan_Lead']);
+Route::post('/show_Home_Loan_LeadAPI', [AdminController::class, 'show_Home_Loan_LeadAPI']);
+
+### show_home_loan_login ###
+Route::get('/show_home_loan_login', [AdminController::class, 'show_Home_Loan_Login']);
+Route::post('/show_Home_Loan_loginapi', [AdminController::class, 'show_Home_Loan_LoginAPI']);
+
 
 
 Route::post('/update-obligation', [AdminController::class, 'updateobligation']);  // obligation 

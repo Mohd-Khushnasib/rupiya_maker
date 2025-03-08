@@ -179,8 +179,8 @@ exit;
                                     href="{{url('/show_pl_od_leads')}}">PL & OD
                                     Leads</a>
                             </div>
-                            <div class="btn-group btn btn-pill" role="group" aria-label="..."><a href="">Home Loan
-                                    Leads</a>
+                            <div class="btn-group btn btn-pill" role="group" aria-label="...">
+                                <a href="{{url('/show_home_loan_leads')}}">Home Loan Leads</a>
                             </div>
                         </div>
                     </ul>
@@ -199,8 +199,8 @@ exit;
                                     href="{{url('/show_pl_od_login')}}">PL & OD
                                     Login</a>
                             </div>
-                            <div class="btn-group btn btn-pill" role="group" aria-label="..."><a href="">Home Loan
-                                    Login</a>
+                            <div class="btn-group btn btn-pill" role="group" aria-label="...">
+                                <a href="{{url('/show_home_loan_login')}}">Home Loan Login</a>
                             </div>
                         </div>
                     </ul>
